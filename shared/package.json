@@ -1,0 +1,5 @@
+{
+  "name": "shared",
+  "main": "types.ts",
+  "type": "module"
+}

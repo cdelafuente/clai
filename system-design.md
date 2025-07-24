@@ -1,9 +1,9 @@
-# 🏗️ Real Estate Form Workflow – System Design
+# 🏗️ Clai Coding Challenge – System Design
 
 ## 🗂️ Folder Structure & Key Design Decisions
 
 ```
-real-estate-form-workflow/
+clai/
 ├── backend/              # Express API server (PDF upload, workflows, audit)
 │   ├── services/         # PDFParser, Database (lowdb)
 │   ├── uploads/          # Local PDF file storage
@@ -98,7 +98,7 @@ interface AuditEntry {
 
 ### Database
 
-- Migrate `lowdb` to PostgreSQL (relational) or Firestore (NoSQL).
+- Migrate `lowdb` to PostgreSQL (relational) or DynamoDB (NoSQL).
 - Index on fields like `workflowId`, `role`, and `templateId`.
 
 ### Performance

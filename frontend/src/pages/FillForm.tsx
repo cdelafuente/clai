@@ -3,6 +3,8 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?worker";
+import AuditLog from "../components/AuditLog";
+import ProgressBar from "../components/ProgressBar";
 pdfjsLib.GlobalWorkerOptions.workerPort = new pdfjsWorker();
 
 export default function FillForm() {
@@ -120,19 +122,15 @@ export default function FillForm() {
       {progress?.length > 0 && (
         <div className="mb-6 space-y-2">
           {progress
-            .filter((p) => p.role == role)
+            .filter((p) => p.role === role)
             .map((p: any) => (
-              <div key={p.role}>
-                <p className="text-sm font-medium capitalize">
-                  {p.role}: {p.filled}/{p.assigned} fields ({p.percent}%)
-                </p>
-                <div className="w-full bg-gray-200 h-2 rounded">
-                  <div
-                    className="h-2 bg-blue-600 rounded"
-                    style={{ width: `${p.percent}%` }}
-                  ></div>
-                </div>
-              </div>
+              <ProgressBar
+                key={p.role}
+                role={p.role}
+                assigned={p.assigned}
+                filled={p.filled}
+                percent={p.percent}
+              />
             ))}
         </div>
       )}
@@ -184,31 +182,7 @@ export default function FillForm() {
             Submit
           </button>
         </div>
-        <div className="w-[300px] max-h-[80vh] overflow-y-auto">
-          <h2 className="text-lg font-semibold mb-3">Activity Log</h2>
-          {auditLog.length === 0 ? (
-            <p className="text-gray-500 text-sm">No events recorded yet.</p>
-          ) : (
-            <ul className="space-y-2 text-sm text-gray-800">
-              {auditLog
-                .sort(
-                  (a, b) =>
-                    new Date(b.timestamp).getTime() -
-                    new Date(a.timestamp).getTime()
-                )
-                .map((entry, i) => (
-                  <li key={i} className="border rounded px-3 py-2 bg-gray-50">
-                    <strong className="capitalize">{entry.role}</strong> —{" "}
-                    {entry.event}
-                    <br />
-                    <span className="text-gray-500 text-xs">
-                      {new Date(entry.timestamp).toLocaleString()}
-                    </span>
-                  </li>
-                ))}
-            </ul>
-          )}
-        </div>
+        <AuditLog entries={auditLog} />
       </div>
     </div>
   );

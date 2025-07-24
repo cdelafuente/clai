@@ -55,3 +55,20 @@ export function logAudit(entry: AuditEntry) {
 export function getAuditLog(workflowId: string): AuditEntry[] {
   return db.data!.audits.filter(a => a.workflowId === workflowId);
 }
+
+export function getWorkflowProgress(template: Template, workflow: Workflow) {
+  const roles: Role[] = ['agent', 'buyer', 'seller'];
+
+  const progress = roles.map(role => {
+    const assigned = template.fields.filter(f => f.role === role);
+    const submitted = workflow.responses[role] || [];
+    const filled = submitted.filter(f => f.value !== undefined && f.value !== '').length;
+    const percent = assigned.length ? Math.round((filled / assigned.length) * 100) : 0;
+
+    return { role, assigned: assigned.length, filled, percent };
+  });
+
+  const isComplete = progress.every(p => p.percent === 100);
+
+  return { progress, isComplete };
+}

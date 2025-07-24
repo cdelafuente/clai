@@ -13,6 +13,7 @@ import {
   updateWorkflow,
   logAudit,
   getAuditLog,
+  getWorkflowProgress,
 } from './services/Database.js';
 import { nanoid } from 'nanoid';
 import { Role, Workflow } from '../../shared/types.js';
@@ -89,7 +90,22 @@ app.post('/api/workflows', async (req, res) => {
 app.get('/api/workflows/:id', (req, res) => {
   const workflow = getWorkflowById(req.params.id);
   if (!workflow) return res.status(404).json({ error: 'Workflow not found' });
-  res.json(workflow);
+
+  const template = findTemplateById(workflow.templateId);
+  if (!template) return res.status(404).json({ error: 'Template not found' });
+
+  const { progress, isComplete } = getWorkflowProgress(template, workflow);
+
+  // update workflow status if complete
+  if (isComplete && workflow.status !== 'completed') {
+    workflow.status = 'completed';
+    updateWorkflow(workflow);
+  }
+
+  res.json({
+    ...workflow,
+    progress,
+  });
 });
 
 app.post('/api/workflows/:workflowId/submit/:role', async (req, res) => {

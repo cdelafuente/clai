@@ -10,12 +10,17 @@ export default function FillForm() {
   const [template, setTemplate] = useState<any>(null);
   const [fields, setFields] = useState<any[]>([]);
   const canvasRefs = useRef<HTMLCanvasElement[]>([]);
+  const [workflow, setWorkflow] = useState<any>(null);
+  const [progress, setProgress] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchWorkflow = async () => {
       const res = await axios.get(
         `http://localhost:3001/api/workflows/${workflowId}`
       );
+      setWorkflow(res.data);
+      setProgress(res.data.progress);
+
       const { templateId, responses } = res.data;
       const templateRes = await axios.get(
         `http://localhost:3001/api/templates/${templateId}`
@@ -27,7 +32,6 @@ export default function FillForm() {
       );
       const savedFields = responses?.[role!] || [];
 
-      // Merge saved values into current field list
       const merged = assignedFields.map((field: any) => {
         const saved = savedFields.find((s: any) => s.id === field.id);
         return saved ? { ...field, value: saved.value } : field;
@@ -80,7 +84,13 @@ export default function FillForm() {
       }
     );
     alert("Form submitted!");
-    await logAudit('Submitted form');
+    await logAudit("Submitted form");
+
+    const res = await axios.get(
+      `http://localhost:3001/api/workflows/${workflowId}`
+    );
+    setWorkflow(res.data);
+    setProgress(res.data.progress);
   };
 
   const logAudit = async (event: string) => {
@@ -96,6 +106,26 @@ export default function FillForm() {
       <h1 className="text-xl font-semibold mb-4 capitalize">
         Fill Form ({role})
       </h1>
+
+      {progress?.length > 0 && (
+        <div className="mb-6 space-y-2">
+          {progress
+            .filter((p) => p.role == role)
+            .map((p: any) => (
+              <div key={p.role}>
+                <p className="text-sm font-medium capitalize">
+                  {p.role}: {p.filled}/{p.assigned} fields ({p.percent}%)
+                </p>
+                <div className="w-full bg-gray-200 h-2 rounded">
+                  <div
+                    className="h-2 bg-blue-600 rounded"
+                    style={{ width: `${p.percent}%` }}
+                  ></div>
+                </div>
+              </div>
+            ))}
+        </div>
+      )}
       {template &&
         [...Array(template.pages)].map((_, i) => (
           <div key={i} className="relative mt-6">

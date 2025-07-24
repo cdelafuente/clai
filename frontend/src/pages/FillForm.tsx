@@ -12,6 +12,7 @@ export default function FillForm() {
   const canvasRefs = useRef<HTMLCanvasElement[]>([]);
   const [workflow, setWorkflow] = useState<any>(null);
   const [progress, setProgress] = useState<any[]>([]);
+  const [auditLog, setAuditLog] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchWorkflow = async () => {
@@ -36,8 +37,12 @@ export default function FillForm() {
         const saved = savedFields.find((s: any) => s.id === field.id);
         return saved ? { ...field, value: saved.value } : field;
       });
-
       setFields(merged);
+
+      const auditRes = await axios.get(
+        `http://localhost:3001/api/audit/${workflowId}`
+      );
+      setAuditLog(auditRes.data);
     };
     fetchWorkflow();
   }, [workflowId, role]);
@@ -91,6 +96,11 @@ export default function FillForm() {
     );
     setWorkflow(res.data);
     setProgress(res.data.progress);
+
+    const auditRes = await axios.get(
+      `http://localhost:3001/api/audit/${workflowId}`
+    );
+    setAuditLog(auditRes.data);
   };
 
   const logAudit = async (event: string) => {
@@ -126,51 +136,80 @@ export default function FillForm() {
             ))}
         </div>
       )}
-      {template &&
-        [...Array(template.pages)].map((_, i) => (
-          <div key={i} className="relative mt-6">
-            <canvas
-              ref={(el) => (canvasRefs.current[i] = el!)}
-              className="block border shadow-md"
-            />
-            {fields
-              .filter((f) => f.position.page === i + 1)
-              .map((field, idx) => (
-                <div
-                  key={field.id}
-                  className="absolute bg-white text-xs px-2 py-1 border rounded shadow"
-                  style={{
-                    bottom: field.position.y * 1.5,
-                    left: field.position.x * 1.5,
-                  }}
-                >
-                  <label className="block text-[11px] mb-1">
-                    {field.label}
-                  </label>
-                  {field.type === "checkbox" ? (
-                    <input
-                      type="checkbox"
-                      checked={!!field.value}
-                      onChange={(e) => handleChange(idx, e.target.checked)}
-                    />
-                  ) : (
-                    <input
-                      className="text-xs border px-1 rounded"
-                      type={field.type === "date" ? "date" : "text"}
-                      value={field.value ?? ""}
-                      onChange={(e) => handleChange(idx, e.target.value)}
-                    />
-                  )}
-                </div>
-              ))}
-          </div>
-        ))}
-      <button
-        onClick={handleSubmit}
-        className="mt-6 px-4 py-2 bg-blue-600 text-white rounded"
-      >
-        Submit
-      </button>
+      <div className="flex gap-6">
+        <div className="flex-1 space-y-6">
+          {template &&
+            [...Array(template.pages)].map((_, i) => (
+              <div key={i} className="relative mt-6">
+                <canvas
+                  ref={(el) => (canvasRefs.current[i] = el!)}
+                  className="block border shadow-md"
+                />
+                {fields
+                  .filter((f) => f.position.page === i + 1)
+                  .map((field, idx) => (
+                    <div
+                      key={field.id}
+                      className="absolute bg-white text-xs px-2 py-1 border rounded shadow"
+                      style={{
+                        bottom: field.position.y * 1.5,
+                        left: field.position.x * 1.5,
+                      }}
+                    >
+                      <label className="block text-[11px] mb-1">
+                        {field.label}
+                      </label>
+                      {field.type === "checkbox" ? (
+                        <input
+                          type="checkbox"
+                          checked={!!field.value}
+                          onChange={(e) => handleChange(idx, e.target.checked)}
+                        />
+                      ) : (
+                        <input
+                          className="text-xs border px-1 rounded"
+                          type={field.type === "date" ? "date" : "text"}
+                          value={field.value ?? ""}
+                          onChange={(e) => handleChange(idx, e.target.value)}
+                        />
+                      )}
+                    </div>
+                  ))}
+              </div>
+            ))}
+          <button
+            onClick={handleSubmit}
+            className="mt-6 px-4 py-2 bg-blue-600 text-white rounded"
+          >
+            Submit
+          </button>
+        </div>
+        <div className="w-[300px] max-h-[80vh] overflow-y-auto">
+          <h2 className="text-lg font-semibold mb-3">Activity Log</h2>
+          {auditLog.length === 0 ? (
+            <p className="text-gray-500 text-sm">No events recorded yet.</p>
+          ) : (
+            <ul className="space-y-2 text-sm text-gray-800">
+              {auditLog
+                .sort(
+                  (a, b) =>
+                    new Date(b.timestamp).getTime() -
+                    new Date(a.timestamp).getTime()
+                )
+                .map((entry, i) => (
+                  <li key={i} className="border rounded px-3 py-2 bg-gray-50">
+                    <strong className="capitalize">{entry.role}</strong> —{" "}
+                    {entry.event}
+                    <br />
+                    <span className="text-gray-500 text-xs">
+                      {new Date(entry.timestamp).toLocaleString()}
+                    </span>
+                  </li>
+                ))}
+            </ul>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,4 @@
 {
   "name": "clai-coding-challenge",
-  "private": false,
-  "workspaces": ["frontend", "backend", "shared"]
+  "private": false
 }

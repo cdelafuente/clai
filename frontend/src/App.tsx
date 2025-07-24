@@ -124,6 +124,7 @@ export default function App() {
                       left: field.position.x * 1.5,
                     }}
                   >
+                    <div className="font-bold">{ field.label }</div>
                     <select
                       className="text-xs border rounded px-1"
                       value={field.role}

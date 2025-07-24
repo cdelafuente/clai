@@ -30,3 +30,10 @@ export interface AuditEntry {
   event: string;
   timestamp: string;
 }
+
+export interface AuditEntry {
+  workflowId: string;
+  role: Role;
+  event: string;
+  timestamp: string;
+}

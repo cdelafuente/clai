@@ -15,6 +15,7 @@ export default function FillForm() {
   const [workflow, setWorkflow] = useState<any>(null);
   const [progress, setProgress] = useState<any[]>([]);
   const [auditLog, setAuditLog] = useState<any[]>([]);
+  const viewLogged = useRef(false);
 
   useEffect(() => {
     const fetchWorkflow = async () => {
@@ -71,10 +72,11 @@ export default function FillForm() {
   }, [template]);
 
   useEffect(() => {
-    if (workflowId && role) {
+    if (!viewLogged.current && workflowId && role && template) {
       logAudit("Viewed form page");
+      viewLogged.current = true;
     }
-  }, [workflowId, role]);
+  }, [workflowId, role, template]);
 
   const handleChange = (index: number, value: string | boolean) => {
     const updated = [...fields];

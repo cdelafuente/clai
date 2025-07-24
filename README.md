@@ -1,5 +1,4 @@
-# 🏡 Real Estate Form Workflow System
-
+# 🏡 Clai Coding Challenge
 This project simulates a real estate document workflow system where agents, buyers, and sellers can fill out PDF forms online. It includes features like PDF upload, form field detection, role-based assignment, fillable links, audit logging, and workflow progress tracking.
 
 ---
@@ -26,8 +25,8 @@ This project simulates a real estate document workflow system where agents, buye
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/real-estate-form-workflow.git
-cd real-estate-form-workflow
+git clone https://github.com/cdelafuente/clai.git
+cd clai
 ```
 
 ### 2. Install Dependencies
@@ -59,10 +58,10 @@ Frontend will start at [http://localhost:5173](http://localhost:5173)
 ```
 real-estate-form-workflow/
 ├── backend/          # Express.js backend
+    ├── uploads/      # PDF file uploads
 ├── frontend/         # React frontend with Vite
 ├── shared/           # Shared TypeScript types
 ├── data/             # lowdb JSON store
-├── uploads/          # PDF file uploads
 └── README.md
 ```
 
@@ -93,21 +92,9 @@ real-estate-form-workflow/
 
 ## 🧪 Sample Flow
 
-1. Upload a PDF in the UI
+1. Upload a PDF
 2. Assign fields in the template editor (`/template/:id`)
 3. Create a workflow
 4. Share fill links (`/fill/:workflowId/:role`)
 5. Recipients complete their sections
 6. Monitor audit logs and completion status
-
----
-
-## 📝 License
-
-MIT
-
----
-
-## 📬 Feedback & Contributions
-
-Feel free to open issues or PRs to enhance functionality or improve usability.

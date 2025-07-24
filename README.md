@@ -33,6 +33,8 @@ cd clai
 
 ```bash
 pnpm install
+pnpm --filter backend install
+pnpm --filter frontend install
 ```
 
 ### 3. Start the Backend

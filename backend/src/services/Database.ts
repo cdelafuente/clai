@@ -1,12 +1,18 @@
 import { Low } from 'lowdb';
-import { JSONFile, JSONFilePreset } from 'lowdb/node'; // For Node.js (LowDB v7)
-import { join } from 'path';
+import { JSONFilePreset } from 'lowdb/node'; // For Node.js (LowDB v7)
+import path, { join } from 'path';
 import type { Template, Workflow, AuditEntry } from '../../../shared/types.js';
 
 interface DBData {
   templates: Template[];
   workflows: Workflow[];
   audits: AuditEntry[];
+}
+
+// Ensure data/ directory exists
+const dataDir = path.join(process.cwd(), 'backend/data');
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
 }
 
 let db: Low<DBData, unknown>;

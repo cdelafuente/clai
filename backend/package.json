@@ -6,10 +6,7 @@
     "dev": "tsx src/server.ts"
   },
   "dependencies": {
-    "@thednp/dommatrix": "^2.0.12",
-    "canvas": "^3.1.2",
     "cors": "^2",
-    "dexie": "^4.0.11",
     "express": "^4",
     "fs": "0.0.1-security",
     "lowdb": "^7",

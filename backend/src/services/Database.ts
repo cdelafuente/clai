@@ -1,6 +1,7 @@
 import { Low } from 'lowdb';
 import { JSONFilePreset } from 'lowdb/node'; // For Node.js (LowDB v7)
 import path, { join } from 'path';
+import fs from 'fs';
 import type { Template, Workflow, AuditEntry } from '../../../shared/types.js';
 
 interface DBData {

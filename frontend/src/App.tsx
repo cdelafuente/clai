@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import * as pdfjsLib from 'pdfjs-dist';
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.mjs?worker';
+pdfjsLib.GlobalWorkerOptions.workerPort = new pdfjsWorker();
 
 interface Field {
   id: string;
   label: string;
-  type: 'text' | 'checkbox' | 'date' | 'signature';
+  type: "text" | "checkbox" | "date" | "signature";
   role: string;
   position: { x: number; y: number; page: number };
 }
@@ -20,26 +23,66 @@ export default function App() {
   const [file, setFile] = useState<File | null>(null);
   const [template, setTemplate] = useState<Template | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>("");
+  const canvasRefs = useRef<HTMLCanvasElement[]>([]);
 
   const handleUpload = async () => {
     if (!file) return;
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append("file", file);
+
     try {
-      const res = await axios.post('http://localhost:3001/api/upload', formData);
+      const res = await axios.post(
+        "http://localhost:3001/api/upload",
+        formData
+      );
       setTemplate(res.data);
       setSuccess(true);
-      setError('');
+      setError("");
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Upload failed');
+      setError(err.response?.data?.error || "Upload failed");
       setSuccess(false);
     }
   };
 
+  useEffect(() => {
+    const renderPDF = async () => {
+      if (!template) return;
+      const url = `http://localhost:3001/uploads/${template.filename}`;
+      const pdf = await pdfjsLib.getDocument(url).promise;
+
+      for (let i = 0; i < pdf.numPages; i++) {
+        const page = await pdf.getPage(i + 1);
+        const viewport = page.getViewport({ scale: 1.5 });
+
+        const canvas = canvasRefs.current[i];
+        if (!canvas) continue;
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        const context = canvas.getContext("2d");
+        await page.render({ canvasContext: context!, viewport }).promise;
+      }
+    };
+
+    renderPDF();
+  }, [template]);
+
+  const handleRoleChange = async (index: number, role: string) => {
+    if (!template) return;
+    const updatedFields = [...template.fields];
+    updatedFields[index] = { ...updatedFields[index], role };
+    const updatedTemplate = { ...template, fields: updatedFields };
+    setTemplate(updatedTemplate);
+    await axios.post(
+      `http://localhost:3001/api/templates/${template.id}`,
+      updatedTemplate
+    );
+  };
+
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-6 max-w-6xl mx-auto">
       {error && (
         <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
           {error}
@@ -51,25 +94,49 @@ export default function App() {
         </div>
       )}
       <h1 className="text-2xl font-bold mb-4">PDF Template Builder</h1>
-      <input type="file" onChange={e => setFile(e.target.files?.[0] || null)} />
-      <button className="mt-2 bg-blue-500 text-white px-4 py-2 rounded" onClick={handleUpload}>
+      <input
+        type="file"
+        onChange={(e) => setFile(e.target.files?.[0] || null)}
+      />
+      <button
+        className="mt-2 bg-blue-500 text-white px-4 py-2 rounded"
+        onClick={handleUpload}
+      >
         Upload
       </button>
 
       {template && (
         <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-2">Fields</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {template.fields.map(field => (
-              <div key={field.id} className="border p-4 rounded bg-white shadow">
-                <p><strong>Label:</strong> {field.label}</p>
-                <p><strong>Type:</strong> {field.type}</p>
-                <p><strong>Role:</strong> {field.role}</p>
-                <p><strong>Page:</strong> {field.position.page}</p>
-                <p><strong>Position:</strong> ({field.position.x}, {field.position.y})</p>
-              </div>
-            ))}
-          </div>
+          {[...Array(template.pages)].map((_, i) => (
+            <div key={i} className="relative mt-6">
+              <canvas
+                ref={(el) => (canvasRefs.current[i] = el!)}
+                className="block border shadow-md"
+              />
+              {template.fields
+                .filter((f) => f.position.page === i + 1)
+                .map((field, idx) => (
+                  <div
+                    key={field.id}
+                    className="absolute bg-white text-xs px-1 py-[2px] border rounded shadow"
+                    style={{
+                      bottom: field.position.y * 1.5,
+                      left: field.position.x * 1.5,
+                    }}
+                  >
+                    <select
+                      className="text-xs border rounded px-1"
+                      value={field.role}
+                      onChange={(e) => handleRoleChange(idx, e.target.value)}
+                    >
+                      <option value="agent">Agent</option>
+                      <option value="buyer">Buyer</option>
+                      <option value="seller">Seller</option>
+                    </select>
+                  </div>
+                ))}
+            </div>
+          ))}
         </div>
       )}
     </div>
